@@ -28,14 +28,14 @@ func (r *repository) GetMentorByID(ctx context.Context, id string) (*MentorProfi
 	var m MentorProfile
 	query := `
 		SELECT 
-			m.profile_id, m.status, m.bio, m.expertise_tags, m.verification_url, m.hourly_rate, m.availability_slots, m.verified_at, m.last_online_at,
+			m.profile_id, m.status, m.bio, m.expertise_tags, m.verification_url, m.hourly_rate, m.availability_slots, m.verified_at, m.last_online_at, m.average_rating, m.review_count,
 			p.full_name, p.avatar_url, p.profile_headline, p.organization, p.skill_tags
 		FROM public.mentor_profiles m
 		JOIN public.profiles p ON m.profile_id = p.id
 		WHERE m.profile_id = $1
 	`
 	err := r.db.QueryRow(ctx, query, id).Scan(
-		&m.ProfileID, &m.Status, &m.Bio, &m.ExpertiseTags, &m.VerificationURL, &m.HourlyRate, &m.AvailabilitySlots, &m.VerifiedAt, &m.LastOnlineAt,
+		&m.ProfileID, &m.Status, &m.Bio, &m.ExpertiseTags, &m.VerificationURL, &m.HourlyRate, &m.AvailabilitySlots, &m.VerifiedAt, &m.LastOnlineAt, &m.AverageRating, &m.ReviewCount,
 		&m.FullName, &m.AvatarURL, &m.ProfileHeadline, &m.Organization, &m.SkillTags,
 	)
 	if err != nil {
@@ -86,7 +86,7 @@ func (r *repository) GetActiveMentors(ctx context.Context, filter MentorFilter) 
 
 	query := fmt.Sprintf(`
 		SELECT 
-			m.profile_id, m.status, m.bio, m.expertise_tags, m.verification_url, m.hourly_rate, m.availability_slots, m.verified_at, m.last_online_at,
+			m.profile_id, m.status, m.bio, m.expertise_tags, m.verification_url, m.hourly_rate, m.availability_slots, m.verified_at, m.last_online_at, m.average_rating, m.review_count,
 			p.full_name, p.avatar_url, p.profile_headline, p.organization, p.skill_tags
 		FROM public.mentor_profiles m
 		JOIN public.profiles p ON m.profile_id = p.id
@@ -105,7 +105,7 @@ func (r *repository) GetActiveMentors(ctx context.Context, filter MentorFilter) 
 	for rows.Next() {
 		var m MentorProfile
 		err := rows.Scan(
-			&m.ProfileID, &m.Status, &m.Bio, &m.ExpertiseTags, &m.VerificationURL, &m.HourlyRate, &m.AvailabilitySlots, &m.VerifiedAt, &m.LastOnlineAt,
+			&m.ProfileID, &m.Status, &m.Bio, &m.ExpertiseTags, &m.VerificationURL, &m.HourlyRate, &m.AvailabilitySlots, &m.VerifiedAt, &m.LastOnlineAt, &m.AverageRating, &m.ReviewCount,
 			&m.FullName, &m.AvatarURL, &m.ProfileHeadline, &m.Organization, &m.SkillTags,
 		)
 		if err != nil {
