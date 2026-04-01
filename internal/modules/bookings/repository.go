@@ -14,6 +14,7 @@ type Repository interface {
 	UpdateBookingStatus(ctx context.Context, id string, status BookingStatus, meetingLink string) error
 	ListBookingsByStudent(ctx context.Context, studentID string) ([]*Booking, error)
 	ListBookingsByMentor(ctx context.Context, mentorID string) ([]*Booking, error)
+	GetUpcomingSessions(ctx context.Context, minutes int) ([]*Booking, error)
 }
 
 type repository struct {
@@ -117,6 +118,35 @@ func (r *repository) ListBookingsByMentor(ctx context.Context, mentorID string) 
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan booking: %w", err)
+		}
+		bookings = append(bookings, &b)
+	}
+	return bookings, nil
+}
+
+func (r *repository) GetUpcomingSessions(ctx context.Context, minutes int) ([]*Booking, error) {
+	var bookings []*Booking
+	query := `
+		SELECT 
+			id, student_id, mentor_id, start_time, end_time, status, total_price, meeting_link, created_at, updated_at
+		FROM public.bookings
+		WHERE status = 'confirmed' 
+		AND start_time > NOW() 
+		AND start_time <= NOW() + ($1 || ' minutes')::interval
+	`
+	rows, err := r.db.Query(ctx, query, minutes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query upcoming sessions: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var b Booking
+		err := rows.Scan(
+			&b.ID, &b.StudentID, &b.MentorID, &b.StartTime, &b.EndTime, &b.Status, &b.TotalPrice, &b.MeetingLink, &b.CreatedAt, &b.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan upcoming booking: %w", err)
 		}
 		bookings = append(bookings, &b)
 	}

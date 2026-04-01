@@ -3,6 +3,7 @@ package resources
 import (
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/ashparshp/mentormatch-backend/pkg/response"
 )
 
@@ -24,4 +25,19 @@ func (h *Handler) ListResources(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.Success(w, http.StatusOK, resources, "Resources retrieved")
+}
+
+func (h *Handler) DownloadResource(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		response.Error(w, http.StatusBadRequest, "Missing resource ID", "BAD_REQUEST")
+		return
+	}
+
+	if err := h.repo.IncrementDownloads(r.Context(), id); err != nil {
+		response.Error(w, http.StatusInternalServerError, "Failed to increment download count", "INTERNAL_ERROR")
+		return
+	}
+
+	response.Success(w, http.StatusOK, nil, "Download recorded")
 }

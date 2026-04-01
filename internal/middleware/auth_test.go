@@ -21,6 +21,7 @@ func TestAuthMiddleware(t *testing.T) {
 	generateToken := func(id, role string, exp time.Duration) string {
 		claims := jwt.MapClaims{
 			"sub": id,
+			"aud": "authenticated",
 			"exp": time.Now().Add(exp).Unix(),
 			"app_metadata": map[string]interface{}{
 				"role": role,

@@ -9,6 +9,8 @@ type Service interface {
 	DiscoverMentors(ctx context.Context, filter MentorFilter) ([]*MentorProfile, error)
 	OnboardMentor(ctx context.Context, profileID string, req *OnboardMentorRequest) error
 	UpdateAvailability(ctx context.Context, profileID string, slots map[string][]string) error
+	UpdateMentorProfile(ctx context.Context, profileID string, bio *string, hourlyRate float64, services []OfferedService) error
+	SaveProtocolTemplates(ctx context.Context, profileID string, templates []ProtocolTemplate) error
 }
 
 type service struct {
@@ -36,4 +38,12 @@ func (s *service) OnboardMentor(ctx context.Context, profileID string, req *Onbo
 
 func (s *service) UpdateAvailability(ctx context.Context, profileID string, slots map[string][]string) error {
 	return s.repo.UpdateAvailability(ctx, profileID, slots)
+}
+
+func (s *service) UpdateMentorProfile(ctx context.Context, profileID string, bio *string, hourlyRate float64, services []OfferedService) error {
+	return s.repo.UpdateMentorProfile(ctx, profileID, bio, hourlyRate, services)
+}
+
+func (s *service) SaveProtocolTemplates(ctx context.Context, profileID string, templates []ProtocolTemplate) error {
+	return s.repo.SaveProtocolTemplates(ctx, profileID, templates)
 }

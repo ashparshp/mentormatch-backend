@@ -9,6 +9,7 @@ import (
 
 type Repository interface {
 	ListResources(ctx context.Context, category string) ([]*Resource, error)
+	IncrementDownloads(ctx context.Context, id string) error
 }
 
 type repository struct {
@@ -48,4 +49,13 @@ func (r *repository) ListResources(ctx context.Context, category string) ([]*Res
 	}
 
 	return resources, nil
+}
+
+func (r *repository) IncrementDownloads(ctx context.Context, id string) error {
+	query := `UPDATE public.resources SET downloads = downloads + 1 WHERE id = $1`
+	_, err := r.db.Exec(ctx, query, id)
+	if err != nil {
+		return fmt.Errorf("failed to increment downloads: %w", err)
+	}
+	return nil
 }

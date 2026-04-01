@@ -49,6 +49,14 @@ func (m *MockBookingRepo) ListBookingsByMentor(ctx context.Context, id string) (
 	return args.Get(0).([]*Booking), args.Error(1)
 }
 
+func (m *MockBookingRepo) GetUpcomingSessions(ctx context.Context, minutes int) ([]*Booking, error) {
+	args := m.Called(ctx, minutes)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*Booking), args.Error(1)
+}
+
 // MockMentorRepo implements mentors.Repository
 type MockMentorRepo struct {
 	mock.Mock
@@ -70,13 +78,23 @@ func (m *MockMentorRepo) GetActiveMentors(ctx context.Context, filter mentors.Me
 	return args.Get(0).([]*mentors.MentorProfile), args.Error(1)
 }
 
-func (m *MockMentorRepo) CompleteMentorOnboarding(ctx context.Context, id string, req *mentors.OnboardMentorRequest) error {
-	args := m.Called(ctx, id, req)
+func (m *MockMentorRepo) UpdateMentorProfile(ctx context.Context, id string, bio *string, hourlyRate float64, services []mentors.OfferedService) error {
+	args := m.Called(ctx, id, bio, hourlyRate, services)
 	return args.Error(0)
 }
 
 func (m *MockMentorRepo) UpdateAvailability(ctx context.Context, id string, slots map[string][]string) error {
 	args := m.Called(ctx, id, slots)
+	return args.Error(0)
+}
+
+func (m *MockMentorRepo) CompleteMentorOnboarding(ctx context.Context, id string, req *mentors.OnboardMentorRequest) error {
+	args := m.Called(ctx, id, req)
+	return args.Error(0)
+}
+
+func (m *MockMentorRepo) SaveProtocolTemplates(ctx context.Context, id string, templates []mentors.ProtocolTemplate) error {
+	args := m.Called(ctx, id, templates)
 	return args.Error(0)
 }
 
