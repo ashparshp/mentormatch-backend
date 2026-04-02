@@ -24,7 +24,7 @@ func (r *repository) ListResources(ctx context.Context, category string) ([]*Res
 	var resources []*Resource
 	query := `SELECT id, title, category, COALESCE(description, ''), COALESCE(author_name, ''), downloads, rating, COALESCE(file_url, ''), created_at, updated_at FROM public.resources`
 	var args []interface{}
-	
+
 	if category != "" && category != "all" {
 		query += " WHERE category = $1"
 		args = append(args, category)
