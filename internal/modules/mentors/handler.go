@@ -72,7 +72,7 @@ func (h *Handler) GetMyProfile(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) DiscoverMentors(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
-	
+
 	filter := MentorFilter{
 		Search:    query.Get("search"),
 		Expertise: query.Get("expertise"),
@@ -217,4 +217,3 @@ func (h *Handler) SaveProtocolTemplates(w http.ResponseWriter, r *http.Request) 
 
 	response.Success(w, http.StatusOK, nil, "Protocol templates saved")
 }
-

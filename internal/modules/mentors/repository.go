@@ -52,7 +52,7 @@ func (r *repository) GetMentorByID(ctx context.Context, id string) (*MentorProfi
 
 func (r *repository) GetActiveMentors(ctx context.Context, filter MentorFilter) ([]*MentorProfile, error) {
 	var mentors []*MentorProfile
-	
+
 	// Basic implementation with dynamic filters
 	whereClauses := []string{"m.status = 'active'"}
 	args := []interface{}{}
@@ -65,10 +65,10 @@ func (r *repository) GetActiveMentors(ctx context.Context, filter MentorFilter) 
 	if filter.Search != "" {
 		searchTerm := "%" + strings.TrimSpace(filter.Search) + "%"
 		searchTags := strings.Split(strings.ToLower(filter.Search), " ")
-		
+
 		// Optimize where clause to include tag overlap and headline matches
 		whereClauses = append(whereClauses, fmt.Sprintf("(p.full_name ILIKE $%d OR p.profile_headline ILIKE $%d OR m.bio ILIKE $%d OR m.expertise_tags && $%d)", argIdx, argIdx, argIdx, argIdx+1))
-		
+
 		// Use a weighted rank for ordering
 		rankSelect = fmt.Sprintf(`(
 			CASE WHEN p.full_name ILIKE $%d THEN 10 ELSE 0 END +
@@ -76,10 +76,10 @@ func (r *repository) GetActiveMentors(ctx context.Context, filter MentorFilter) 
 			CASE WHEN p.profile_headline ILIKE $%d THEN 5 ELSE 0 END +
 			CASE WHEN m.bio ILIKE $%d THEN 2 ELSE 0 END
 		) as match_rank`, argIdx, argIdx+1, argIdx, argIdx)
-		
+
 		args = append(args, searchTerm, searchTags)
 		argIdx += 2
-		
+
 		// If searching, prioritize match_rank
 		orderBy = "match_rank DESC, m.average_rating DESC"
 	}

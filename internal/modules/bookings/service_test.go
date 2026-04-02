@@ -133,7 +133,7 @@ func TestCreateBooking(t *testing.T) {
 		assert.NotNil(t, booking)
 		assert.Equal(t, 200.0, booking.TotalPrice) // 2 hours * 100 rate
 		assert.Equal(t, StatusPending, booking.Status)
-		
+
 		mockMentorRepo.AssertExpectations(t)
 		mockBookingRepo.AssertExpectations(t)
 	})
