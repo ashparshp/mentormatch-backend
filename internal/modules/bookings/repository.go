@@ -26,6 +26,23 @@ func NewRepository(db *pgxpool.Pool) Repository {
 }
 
 func (r *repository) CreateBooking(ctx context.Context, b *Booking) error {
+	const findExistingQuery = `
+		SELECT id, created_at, updated_at
+		FROM public.bookings
+		WHERE student_id = $1
+		  AND mentor_id = $2
+		  AND start_time = $3
+		  AND end_time = $4
+		ORDER BY created_at DESC
+		LIMIT 1
+	`
+
+	if err := r.db.QueryRow(ctx, findExistingQuery, b.StudentID, b.MentorID, b.StartTime, b.EndTime).Scan(&b.ID, &b.CreatedAt, &b.UpdatedAt); err == nil {
+		return nil
+	} else if err != pgx.ErrNoRows {
+		return fmt.Errorf("failed to check existing booking: %w", err)
+	}
+
 	query := `
 		INSERT INTO public.bookings (student_id, mentor_id, start_time, end_time, status, total_price)
 		VALUES ($1, $2, $3, $4, $5, $6)
@@ -40,7 +57,7 @@ func (r *repository) CreateBooking(ctx context.Context, b *Booking) error {
 
 func (r *repository) GetBookingByID(ctx context.Context, id string) (*Booking, error) {
 	var b Booking
-	query := `SELECT id, student_id, mentor_id, start_time, end_time, status, total_price, meeting_link, created_at, updated_at FROM public.bookings WHERE id = $1`
+	query := `SELECT id, student_id, mentor_id, start_time, end_time, status, total_price, COALESCE(meeting_link, ''), created_at, updated_at FROM public.bookings WHERE id = $1`
 	err := r.db.QueryRow(ctx, query, id).Scan(
 		&b.ID, &b.StudentID, &b.MentorID, &b.StartTime, &b.EndTime, &b.Status, &b.TotalPrice, &b.MeetingLink, &b.CreatedAt, &b.UpdatedAt,
 	)
@@ -66,8 +83,8 @@ func (r *repository) ListBookingsByStudent(ctx context.Context, studentID string
 	var bookings []*Booking
 	query := `
 		SELECT 
-			b.id, b.student_id, b.mentor_id, b.start_time, b.end_time, b.status, b.total_price, b.meeting_link, b.created_at, b.updated_at,
-			p.full_name as mentor_name, COALESCE(p.avatar_url, '') as mentor_avatar
+			b.id, b.student_id, b.mentor_id, b.start_time, b.end_time, b.status, b.total_price, COALESCE(b.meeting_link, ''), b.created_at, b.updated_at,
+			COALESCE(p.full_name, '') as mentor_name, COALESCE(p.avatar_url, '') as mentor_avatar
 		FROM public.bookings b
 		JOIN public.profiles p ON b.mentor_id = p.id
 		WHERE b.student_id = $1 
@@ -97,8 +114,8 @@ func (r *repository) ListBookingsByMentor(ctx context.Context, mentorID string) 
 	var bookings []*Booking
 	query := `
 		SELECT 
-			b.id, b.student_id, b.mentor_id, b.start_time, b.end_time, b.status, b.total_price, b.meeting_link, b.created_at, b.updated_at,
-			p.full_name as student_name, COALESCE(p.avatar_url, '') as student_avatar
+			b.id, b.student_id, b.mentor_id, b.start_time, b.end_time, b.status, b.total_price, COALESCE(b.meeting_link, ''), b.created_at, b.updated_at,
+			COALESCE(p.full_name, '') as student_name, COALESCE(p.avatar_url, '') as student_avatar
 		FROM public.bookings b
 		JOIN public.profiles p ON b.student_id = p.id
 		WHERE b.mentor_id = $1 
@@ -128,7 +145,7 @@ func (r *repository) GetUpcomingSessions(ctx context.Context, minutes int) ([]*B
 	var bookings []*Booking
 	query := `
 		SELECT 
-			id, student_id, mentor_id, start_time, end_time, status, total_price, meeting_link, created_at, updated_at
+			id, student_id, mentor_id, start_time, end_time, status, total_price, COALESCE(meeting_link, ''), created_at, updated_at
 		FROM public.bookings
 		WHERE status = 'accepted' 
 		AND start_time > NOW() 

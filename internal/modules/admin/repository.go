@@ -33,7 +33,7 @@ func NewRepository(db *pgxpool.Pool) Repository {
 
 func (r *repository) GetPlatformStats(ctx context.Context) (*PlatformStats, error) {
 	var stats PlatformStats
-	
+
 	// 1. Total Users
 	err := r.db.QueryRow(ctx, "SELECT count(*) FROM public.profiles").Scan(&stats.TotalUsers)
 	if err != nil {
@@ -103,7 +103,7 @@ func (r *repository) VerifyMentor(ctx context.Context, mentorID string, status m
 func (r *repository) ListAllPayments(ctx context.Context) ([]*payments.Payment, error) {
 	var list []*payments.Payment
 	query := `
-		SELECT id, booking_id, student_id, amount, currency, status, provider, razorpay_order_id, razorpay_payment_id, created_at, updated_at
+		SELECT id, booking_id, student_id, amount, currency, status, provider, COALESCE(provider_order_id, ''), COALESCE(provider_payment_id, ''), COALESCE(client_secret, ''), created_at, updated_at
 		FROM public.payments
 		ORDER BY created_at DESC
 	`

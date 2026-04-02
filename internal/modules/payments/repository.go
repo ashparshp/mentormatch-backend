@@ -23,7 +23,7 @@ func NewRepository(db *pgxpool.Pool) Repository {
 
 func (r *repository) CreatePayment(ctx context.Context, p *Payment) error {
 	query := `
-		INSERT INTO public.payments (booking_id, student_id, amount, currency, status, provider, razorpay_order_id)
+		INSERT INTO public.payments (booking_id, student_id, amount, currency, status, provider, provider_order_id)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id, created_at, updated_at
 	`
@@ -37,9 +37,9 @@ func (r *repository) CreatePayment(ctx context.Context, p *Payment) error {
 func (r *repository) GetPaymentByOrderID(ctx context.Context, orderID string) (*Payment, error) {
 	var p Payment
 	query := `
-		SELECT id, booking_id, student_id, amount, currency, status, provider, COALESCE(razorpay_order_id, ''), COALESCE(razorpay_payment_id, ''), COALESCE(razorpay_signature, ''), created_at, updated_at
+		SELECT id, booking_id, student_id, amount, currency, status, provider, COALESCE(provider_order_id, ''), COALESCE(provider_payment_id, ''), COALESCE(client_secret, ''), created_at, updated_at
 		FROM public.payments
-		WHERE razorpay_order_id = $1
+		WHERE provider_order_id = $1
 	`
 	err := r.db.QueryRow(ctx, query, orderID).Scan(
 		&p.ID, &p.BookingID, &p.StudentID, &p.Amount, &p.Currency, &p.Status, &p.Provider, &p.RazorpayOrderID, &p.RazorpayPaymentID, &p.RazorpaySignature, &p.CreatedAt, &p.UpdatedAt,
@@ -60,7 +60,7 @@ func (r *repository) UpdatePaymentStatus(ctx context.Context, id string, status 
 	// 1. Update Payment Status
 	paymentQuery := `
 		UPDATE public.payments 
-		SET status = $1, razorpay_payment_id = $2, razorpay_signature = $3, updated_at = NOW() 
+		SET status = $1, provider_payment_id = $2, client_secret = $3, updated_at = NOW() 
 		WHERE id = $4 RETURNING booking_id
 	`
 	var bookingID string
