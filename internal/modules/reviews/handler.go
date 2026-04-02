@@ -8,6 +8,7 @@ import (
 	"github.com/ashparshp/mentormatch-backend/pkg/response"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 )
 
 type Handler struct {
@@ -58,8 +59,13 @@ func (h *Handler) CreateReview(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) GetMentorReviews(w http.ResponseWriter, r *http.Request) {
 	mentorID := chi.URLParam(r, "id")
-	if mentorID == "" {
-		response.Error(w, http.StatusBadRequest, "Missing mentor ID", "BAD_REQUEST")
+	if mentorID == "" || mentorID == "undefined" {
+		response.Error(w, http.StatusBadRequest, "Invalid mentor ID", "BAD_REQUEST")
+		return
+	}
+
+	if _, err := uuid.Parse(mentorID); err != nil {
+		response.Error(w, http.StatusBadRequest, "Invalid mentor ID", "BAD_REQUEST")
 		return
 	}
 
