@@ -160,8 +160,8 @@ func (r *repository) CompleteMentorOnboarding(ctx context.Context, profileID str
 	}
 	defer tx.Rollback(ctx)
 
-	// Update base profile (role and headline)
-	profileQuery := `UPDATE public.profiles SET full_name = $1, phone_number = $2, organization = $3, skill_tags = $4, role = 'mentor', profile_headline = $5, preferred_languages = $6 WHERE id = $7`
+	// Update base profile (role, headline, and completion status)
+	profileQuery := `UPDATE public.profiles SET full_name = $1, phone_number = $2, organization = $3, skill_tags = $4, role = 'mentor', profile_headline = $5, preferred_languages = $6, has_completed_onboarding = true WHERE id = $7`
 	_, err = tx.Exec(ctx, profileQuery, req.FullName, req.PhoneNumber, req.Organization, req.SkillTags, req.ProfileHeadline, req.Languages, profileID)
 	if err != nil {
 		return fmt.Errorf("failed to update profiles: %w", err)

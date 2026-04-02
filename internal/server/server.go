@@ -97,7 +97,7 @@ func (s *Server) SetupRoutes() {
 	mentorService := mentors.NewService(mentorRepo)
 	reviewService := reviews.NewService(reviewRepo, bookingRepo)
 	bookingService := bookings.NewService(bookingRepo, mentorRepo)
-	chatService := chat.NewService(chatRepo)
+	chatService := chat.NewService(chatRepo, bookingRepo)
 
 	// Handlers
 	userHandler := users.NewHandler(userService)

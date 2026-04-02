@@ -62,7 +62,13 @@ func (h *Handler) GetMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	messages, err := h.service.GetMessages(r.Context(), bookingID)
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok {
+		response.Error(w, http.StatusUnauthorized, "Unauthorized", "UNAUTHORIZED")
+		return
+	}
+
+	messages, err := h.service.GetMessages(r.Context(), bookingID, userID)
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, "Failed to retrieve messages", "INTERNAL_ERROR")
 		return
