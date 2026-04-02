@@ -8,12 +8,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ashparshp/mentormatch-backend/internal/config"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestAuthMiddleware(t *testing.T) {
-	secret := "test_secret"
+	cfg := &config.Config{
+		JWTSecret: "test_secret",
+	}
 	userID := "user-123"
 	role := "mentor"
 
@@ -28,7 +31,7 @@ func TestAuthMiddleware(t *testing.T) {
 			},
 		}
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-		s, _ := token.SignedString([]byte(secret))
+		s, _ := token.SignedString([]byte(cfg.JWTSecret))
 		return s
 	}
 
@@ -61,7 +64,7 @@ func TestAuthMiddleware(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			handler := Auth(secret)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			handler := Auth(cfg)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				ctxUserID := r.Context().Value(UserIDKey).(string)
 				ctxUserRole := r.Context().Value(UserRoleKey).(string)
 				

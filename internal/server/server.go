@@ -128,7 +128,7 @@ func (s *Server) SetupRoutes() {
 
 		// Protected Routes
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.Auth(s.Config.JWTSecret))
+			r.Use(middleware.Auth(s.Config))
 
 			// User Routes
 			r.Get("/me", userHandler.GetProfile)

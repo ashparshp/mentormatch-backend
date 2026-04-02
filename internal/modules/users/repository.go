@@ -2,6 +2,8 @@ package users
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
@@ -25,9 +27,45 @@ func NewRepository(db *pgxpool.Pool) Repository {
 
 func (r *repository) GetProfileByID(ctx context.Context, id string) (*Profile, error) {
 	var p Profile
-	query := `SELECT id, email, full_name, avatar_url, phone_number, profile_headline, organization, social_links, skill_tags, preferred_languages, state, role, has_completed_onboarding, created_at, updated_at FROM public.profiles WHERE id = $1`
+	var fullName, avatarURL, phoneNumber, profileHeadline, organization, state sql.NullString
+	var socialLinksJSON, skillTagsJSON, preferredLanguagesJSON string
+
+	query := `
+		SELECT
+			id,
+			email,
+			full_name,
+			avatar_url,
+			phone_number,
+			profile_headline,
+			organization,
+			COALESCE(social_links, '{}'::jsonb)::text,
+			COALESCE(skill_tags, '[]'::jsonb)::text,
+			COALESCE(preferred_languages, '[]'::jsonb)::text,
+			state,
+			role,
+			has_completed_onboarding,
+			created_at,
+			updated_at
+		FROM public.profiles
+		WHERE id = $1
+	`
 	err := r.db.QueryRow(ctx, query, id).Scan(
-		&p.ID, &p.Email, &p.FullName, &p.AvatarURL, &p.PhoneNumber, &p.ProfileHeadline, &p.Organization, &p.SocialLinks, &p.SkillTags, &p.PreferredLanguages, &p.State, &p.Role, &p.HasCompletedOnboarding, &p.CreatedAt, &p.UpdatedAt,
+		&p.ID,
+		&p.Email,
+		&fullName,
+		&avatarURL,
+		&phoneNumber,
+		&profileHeadline,
+		&organization,
+		&socialLinksJSON,
+		&skillTagsJSON,
+		&preferredLanguagesJSON,
+		&state,
+		&p.Role,
+		&p.HasCompletedOnboarding,
+		&p.CreatedAt,
+		&p.UpdatedAt,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -35,6 +73,35 @@ func (r *repository) GetProfileByID(ctx context.Context, id string) (*Profile, e
 		}
 		return nil, fmt.Errorf("failed to get profile: %w", err)
 	}
+
+	p.FullName = fullName.String
+	p.AvatarURL = avatarURL.String
+	p.PhoneNumber = phoneNumber.String
+	p.ProfileHeadline = profileHeadline.String
+	p.Organization = organization.String
+	p.State = state.String
+
+	if err := json.Unmarshal([]byte(socialLinksJSON), &p.SocialLinks); err != nil {
+		return nil, fmt.Errorf("failed to parse social_links json: %w", err)
+	}
+	if p.SocialLinks == nil {
+		p.SocialLinks = map[string]interface{}{}
+	}
+
+	if err := json.Unmarshal([]byte(skillTagsJSON), &p.SkillTags); err != nil {
+		return nil, fmt.Errorf("failed to parse skill_tags json: %w", err)
+	}
+	if p.SkillTags == nil {
+		p.SkillTags = []string{}
+	}
+
+	if err := json.Unmarshal([]byte(preferredLanguagesJSON), &p.PreferredLanguages); err != nil {
+		return nil, fmt.Errorf("failed to parse preferred_languages json: %w", err)
+	}
+	if p.PreferredLanguages == nil {
+		p.PreferredLanguages = []string{}
+	}
+
 	return &p, nil
 }
 

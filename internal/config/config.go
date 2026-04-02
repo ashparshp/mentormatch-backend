@@ -12,6 +12,7 @@ type Config struct {
 	DatabaseURL       string
 	LogLevel          string
 	JWTSecret         string
+	SupabaseURL       string
 	RazorpayKeyID     string
 	RazorpayKeySecret string
 }
@@ -27,6 +28,7 @@ func LoadConfig() *Config {
 		DatabaseURL:       getEnv("DATABASE_URL", ""),
 		LogLevel:          getEnv("LOG_LEVEL", "info"),
 		JWTSecret:         getEnv("JWT_SECRET", ""),
+		SupabaseURL:       getEnv("SUPABASE_URL", ""),
 		RazorpayKeyID:     getEnv("RAZORPAY_KEY_ID", ""),
 		RazorpayKeySecret: getEnv("RAZORPAY_KEY_SECRET", ""),
 	}
