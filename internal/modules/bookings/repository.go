@@ -130,7 +130,7 @@ func (r *repository) GetUpcomingSessions(ctx context.Context, minutes int) ([]*B
 		SELECT 
 			id, student_id, mentor_id, start_time, end_time, status, total_price, meeting_link, created_at, updated_at
 		FROM public.bookings
-		WHERE status = 'confirmed' 
+		WHERE status = 'accepted' 
 		AND start_time > NOW() 
 		AND start_time <= NOW() + ($1 || ' minutes')::interval
 	`

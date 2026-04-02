@@ -22,7 +22,7 @@ func NewRepository(db *pgxpool.Pool) Repository {
 
 func (r *repository) ListResources(ctx context.Context, category string) ([]*Resource, error) {
 	var resources []*Resource
-	query := `SELECT id, title, category, description, author_name, downloads, rating, COALESCE(file_url, ''), created_at, updated_at FROM public.resources`
+	query := `SELECT id, title, category, COALESCE(description, ''), COALESCE(author_name, ''), downloads, rating, COALESCE(file_url, ''), created_at, updated_at FROM public.resources`
 	var args []interface{}
 	
 	if category != "" && category != "all" {
