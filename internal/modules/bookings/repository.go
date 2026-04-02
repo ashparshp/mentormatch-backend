@@ -132,7 +132,7 @@ func (r *repository) GetUpcomingSessions(ctx context.Context, minutes int) ([]*B
 		FROM public.bookings
 		WHERE status = 'accepted' 
 		AND start_time > NOW() 
-		AND start_time <= NOW() + ($1 || ' minutes')::interval
+		AND start_time <= NOW() + make_interval(mins => $1)
 	`
 	rows, err := r.db.Query(ctx, query, minutes)
 	if err != nil {
