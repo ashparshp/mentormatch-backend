@@ -17,11 +17,33 @@ CREATE TABLE IF NOT EXISTS public.reviews (
 -- 3. Enable RLS
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Anyone can read reviews" ON public.reviews
-    FOR SELECT USING (true);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_policies
+        WHERE schemaname = 'public'
+          AND tablename = 'reviews'
+          AND policyname = 'Anyone can read reviews'
+    ) THEN
+        CREATE POLICY "Anyone can read reviews" ON public.reviews
+            FOR SELECT USING (true);
+    END IF;
+END $$;
 
-CREATE POLICY "Students can insert reviews for their bookings" ON public.reviews
-    FOR INSERT WITH CHECK (auth.uid() = student_id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_policies
+        WHERE schemaname = 'public'
+          AND tablename = 'reviews'
+          AND policyname = 'Students can insert reviews for their bookings'
+    ) THEN
+        CREATE POLICY "Students can insert reviews for their bookings" ON public.reviews
+            FOR INSERT WITH CHECK (auth.uid() = student_id);
+    END IF;
+END $$;
 
 -- 4. Create function to update mentor stats
 CREATE OR REPLACE FUNCTION public.update_mentor_stats()

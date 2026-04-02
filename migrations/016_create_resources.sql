@@ -17,8 +17,19 @@ CREATE TABLE IF NOT EXISTS public.resources (
 ALTER TABLE public.resources ENABLE ROW LEVEL SECURITY;
 
 -- Allow anyone to read resources
-CREATE POLICY "Anyone can read resources" ON public.resources
-    FOR SELECT USING (true);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_policies
+        WHERE schemaname = 'public'
+          AND tablename = 'resources'
+          AND policyname = 'Anyone can read resources'
+    ) THEN
+        CREATE POLICY "Anyone can read resources" ON public.resources
+            FOR SELECT USING (true);
+    END IF;
+END $$;
 
 -- Seed Resources based on MOCK_RESOURCES
 INSERT INTO public.resources (title, category, description, author_name, rating, downloads)
